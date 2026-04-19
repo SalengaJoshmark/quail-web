@@ -134,3 +134,16 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* =========================
+   LOADING ANIMATIONS
+========================= */
+@keyframes loading-progress {
+  0% { transform: scaleX(0); }
+  50% { transform: scaleX(0.7); }
+  100% { transform: scaleX(1); opacity: 0; }
+}
+
+.animate-progress {
+  animation: loading-progress 2s infinite ease-in-out;
+}

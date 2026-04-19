@@ -4,6 +4,7 @@ import { Mail, Lock, User, Phone, Eye, EyeOff } from 'lucide-react';
 import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { toast } from 'sonner';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -72,11 +73,13 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#2D5016] via-[#3d6b1f] to-[#2D5016] flex items-center justify-center p-4 py-12">
+    <>
+      {loading && <LoadingScreen />}
+      <div className="min-h-screen bg-gradient-to-br from-[#2D5016] via-[#3d6b1f] to-[#2D5016] flex items-center justify-center p-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
           <div className="w-20 h-20 bg-white rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
-            <img src="/logo.png" alt="Waje's Quail Farm Logo" className="w-14 h-14 object-contain" />
+            <img src="/logo_quailfarm.png" alt="Waje's Quail Farm Logo" className="w-14 h-14 object-contain" />
           </div>
           <h1 className="text-white text-3xl font-bold mb-2">Waje's Quail Farm</h1>
           <p className="text-white/80">Create your account</p>
@@ -195,5 +198,6 @@ export default function Register() {
         <p className="text-center text-white/60 text-sm mt-6">© 2026 Waje's Quail Farm. All rights reserved.</p>
       </div>
     </div>
+    </>
   );
 }

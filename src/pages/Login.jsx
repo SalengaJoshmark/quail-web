@@ -4,6 +4,7 @@ import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase'; // Ensure db is exported from your firebase.js
 import { toast } from 'sonner';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -42,12 +43,14 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#2D5016] via-[#3d6b1f] to-[#2D5016] flex items-center justify-center p-4">
+    <>
+      {loading && <LoadingScreen />}
+      <div className="min-h-screen bg-gradient-to-br from-[#2D5016] via-[#3d6b1f] to-[#2D5016] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo/Brand Section */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-white rounded-full mx-auto mb-4 flex items-center justify-center shadow-lg">
-            <img src="/logo.png" alt="Waje's Quail Farm Logo" className="w-14 h-14 object-contain" />
+            <img src="/logo_quailfarm.png" alt="Waje's Quail Farm Logo" className="w-14 h-14 object-contain" />
           </div>
           <h1 className="text-white text-3xl font-bold mb-2">Waje's Quail Farm</h1>
           <p className="text-white/80">Farm Management System</p>
@@ -138,5 +141,6 @@ export default function Login() {
         </p>
       </div>
     </div>
+    </>
   );
 }
