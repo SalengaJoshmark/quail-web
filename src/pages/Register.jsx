@@ -77,7 +77,7 @@ export default function Register() {
 
   return (
     <>
-      {loading && <LoadingScreen />}
+      {loading && <LoadingScreen message="Setting up your new farm account..." />}
       <div className="min-h-screen bg-gradient-to-br from-[#2D5016] via-[#3d6b1f] to-[#2D5016] flex items-center justify-center p-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">

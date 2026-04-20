@@ -4,11 +4,13 @@ import { ShoppingBag, Egg, BarChart3, ClipboardList, Lightbulb } from 'lucide-re
 import { db, rtdb } from '../firebase';
 import { collection, query, limit, onSnapshot } from 'firebase/firestore';
 import { ref, onValue } from 'firebase/database';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function Home() {
   const navigate = useNavigate();
   const [eggCount, setEggCount] = useState(0);
   const [feedQuantity, setFeedQuantity] = useState(0); // Changed to feedQuantity
+  const [loading, setLoading] = useState(true);
   const [recommendation, setRecommendation] = useState('Loading daily tips...');
   
   // Get user data from local storage
@@ -19,17 +21,20 @@ export default function Home() {
     const eggRef = ref(rtdb, 'egg_collections');
     const unsubscribeRtdb = onValue(eggRef, (snapshot) => {
       const data = snapshot.val();
+      const todayStr = new Date().toLocaleDateString('en-CA');
+
       if (data) {
         if (typeof data === 'number') {
           setEggCount(data);
         } else {
-          // Get the latest entry from the collection based on date
-          const entries = Object.values(data).sort((a, b) => new Date(b.date) - new Date(a.date));
-          if (entries.length > 0) {
-            setEggCount(entries[0].total || 0);
-          }
+          const entries = Object.values(data);
+          const todayEntry = entries.find(e => e.date === todayStr);
+          setEggCount(todayEntry?.total || 0);
         }
+      } else {
+        setEggCount(0);
       }
+      setLoading(false);
     });
 
     // 2. Listen to Firestore for Feed Inventory (summing quantities from subcollection)
@@ -70,7 +75,9 @@ export default function Home() {
   ];
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <>
+      {loading && <LoadingScreen message="Preparing your farm overview..." />}
+      <div className="space-y-6 max-w-4xl mx-auto">
       {/* Welcome Card */}
       <div className="bg-[#2D5016] text-white rounded-3xl p-8 shadow-lg">
         <h2 className="font-bold text-3xl">Hi, {user?.name || user?.fullName || 'Farmer'}!</h2>
@@ -137,6 +144,7 @@ export default function Home() {
       <p className="text-center text-gray-400 text-xs pt-4">
         Live updates connected to Waje's Quail Farm Database
       </p>
-    </div>
+      </div>
+    </>
   );
 }

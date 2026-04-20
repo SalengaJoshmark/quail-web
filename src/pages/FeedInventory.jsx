@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { ShoppingBag, AlertTriangle, Plus, Package, MapPin, Search } from 'lucide-react';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function FeedInventory() {
   const [inventoryItems, setInventoryItems] = useState([]);
   const [activeTab, setActiveTab] = useState('All Items');
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Formatting for Currency (PH)
@@ -35,8 +37,10 @@ export default function FeedInventory() {
         });
       });
       setInventoryItems(items);
+      setLoading(false);
     }, (error) => {
       console.error("Error fetching feed inventory:", error);
+      setLoading(false);
     });
 
     return () => unsubscribe();
@@ -73,7 +77,9 @@ export default function FeedInventory() {
   };
 
   return (
-    <div className="space-y-6">
+    <>
+      {loading && <LoadingScreen message="Checking feed stock levels..." />}
+      <div className="space-y-6">
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 rounded-2xl p-6 shadow-sm">
@@ -192,6 +198,7 @@ export default function FeedInventory() {
           })}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

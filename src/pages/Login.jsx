@@ -44,7 +44,7 @@ export default function Login() {
 
   return (
     <>
-      {loading && <LoadingScreen />}
+      {loading && <LoadingScreen message="Accessing farm records..." />}
       <div className="min-h-screen bg-gradient-to-br from-[#2D5016] via-[#3d6b1f] to-[#2D5016] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo/Brand Section */}

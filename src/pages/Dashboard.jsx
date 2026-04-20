@@ -143,7 +143,11 @@ export default function Dashboard() {
                   <p className="text-sm font-medium text-gray-900">
                     {user?.name || user?.email || 'User'}
                   </p>
-                  <p className="text-xs text-gray-500">Farm Owner</p>
+                  <p className="text-xs text-gray-500">
+                    {user?.role === 'owner' ? 'Farm Owner' : 
+                     user?.role === 'backup_owner' ? 'Co Farm Owner' : 
+                     'Farm Staff'}
+                  </p>
                 </div>
               </button>
             </div>

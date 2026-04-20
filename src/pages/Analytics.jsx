@@ -3,6 +3,7 @@ import { BarChart3, Download, TrendingUp, Calendar as CalendarIcon } from 'lucid
 import { ref, onValue } from 'firebase/database';
 import { collection, query, limit, getDocs } from 'firebase/firestore';
 import { db, rtdb } from '../firebase';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function Analytics() {
   const [weeklyData, setWeeklyData] = useState([]);
@@ -12,6 +13,7 @@ export default function Analytics() {
     gradeAPercentage: 0,
     efficiency: 0,
   });
+  const [loading, setLoading] = useState(true);
   const [currentMonthName] = useState(new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }));
 
   useEffect(() => {
@@ -61,6 +63,7 @@ export default function Analytics() {
           gradeAPercentage: total > 0 ? Math.round((totalA / total) * 100) : 0,
           efficiency: birdCount > 0 ? Math.round((avg / birdCount) * 100) : 0
         });
+        setLoading(false);
       }
       });
     };
@@ -72,12 +75,13 @@ export default function Analytics() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <>
+      {loading && <LoadingScreen message="Analyzing farm performance..." />}
+      <div className="space-y-6">
       {/* Header with Download Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Monthly Analytics Report</h2>
-          <h2 className="text-2xl font-bold text-[#2D5016]">Monthly Analytics Report</h2>
           <p className="text-gray-600 mt-1">{currentMonthName} Performance Summary</p>
         </div>
         <button className="flex items-center justify-center gap-2 bg-[#2D5016] text-white px-6 py-3 rounded-xl hover:bg-[#3d6b1f] transition-colors shadow-lg">
@@ -176,6 +180,7 @@ export default function Analytics() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

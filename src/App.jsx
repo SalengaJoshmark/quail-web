@@ -6,6 +6,8 @@ import Home from "./pages/Home";
 import EggCount from "./pages/EggCount";
 import Analytics from "./pages/Analytics";
 import FeedInventory from "./pages/FeedInventory";
+import Schedule from "./pages/Schedule";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
         <Route path="egg-count" element={<EggCount />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="feed-inventory" element={<FeedInventory />} />
+        <Route path="schedule" element={<Schedule />} />
+        <Route path="profile" element={<Profile />} />
       </Route>
     </Routes>
   );
