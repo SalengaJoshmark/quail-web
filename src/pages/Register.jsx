@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, User, Phone, Eye, EyeOff } from 'lucide-react';
-import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, setDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { toast } from 'sonner';
 import LoadingScreen from '../components/LoadingScreen';
@@ -12,7 +12,7 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: '',
+    name: '',
     email: '',
     phone: '',
     password: '',
@@ -45,13 +45,16 @@ export default function Register() {
         throw new Error('An account with this email already exists.');
       }
 
-      // Create user document in Firestore (matching mobile app schema)
-      await addDoc(collection(db, 'users'), {
-        fullName: formData.fullName,
+      // Use setDoc with the email as the Document ID to match Security Rules
+      await setDoc(doc(db, 'user_access', formData.email), {
+        name: formData.name,
         email: formData.email,
         phone: formData.phone,
         password: formData.password, // Ideally hashed, matching your app logic
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        profilePic: '',
+        role: 'pending', // Default role for new users
+        status: 'pending'
       });
 
       toast.success('Account created successfully!');
@@ -91,14 +94,14 @@ export default function Register() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
-                  id="fullName"
-                  name="fullName"
-                  value={formData.fullName}
+                  id="name"
+                  name="name"
+                  value={formData.name}
                   onChange={handleChange}
                   placeholder="John Doe"
                   required

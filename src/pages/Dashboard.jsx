@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Bell, Home, BarChart3, Calendar, User, LogOut, Settings, ShoppingBag, Egg } from 'lucide-react';
+import { Menu, Home, BarChart3, Calendar, User, LogOut, Settings, ShoppingBag, Egg } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -11,7 +11,6 @@ export default function Dashboard() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [notificationCount] = useState(3);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -22,10 +21,9 @@ export default function Dashboard() {
   const mainNavItems = [
     { icon: Home, label: 'Home', path: '/dashboard' },
     { icon: Egg, label: 'Egg Count', path: '/dashboard/egg-count' },
-    { icon: BarChart3, label: 'Production Reports', path: '/dashboard/production-reports' },
-    { icon: ShoppingBag, label: 'Feed Inventory', path: '/dashboard/feed-inventory' },
+    { icon: BarChart3, label: 'Analytics', path: '/dashboard/analytics' }, // Keep Analytics
+    { icon: ShoppingBag, label: 'Feed Inventory', path: '/dashboard/feed-inventory' }, // Update this
     { icon: Calendar, label: 'Schedule', path: '/dashboard/schedule' },
-    { icon: Bell, label: 'Alerts', path: '/dashboard/alerts' },
     { icon: User, label: 'Profile', path: '/dashboard/profile' },
   ];
 
@@ -75,11 +73,6 @@ export default function Dashboard() {
               >
                 <Icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'stroke-[2.5px]' : ''}`} />
                 {sidebarOpen && <span className="font-medium">{item.label}</span>}
-                {item.label === 'Alerts' && notificationCount > 0 && (
-                  <span className="ml-auto bg-yellow-400 text-[#2D5016] text-xs font-bold px-2 py-0.5 rounded-full">
-                    {notificationCount}
-                  </span>
-                )}
               </button>
             );
           })}
@@ -121,36 +114,34 @@ export default function Dashboard() {
               <h2 className="text-2xl font-bold text-gray-900">
                 {mainNavItems.find(item => item.path === location.pathname)?.label || 'Farm Overview'}
               </h2>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="text-sm text-gray-600 mt-0.5">
                 {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
               </p>
             </div>
             
             <div className="flex items-center gap-4">
-              {/* Notifications */}
-              <button
-                onClick={() => navigate('/dashboard/alerts')}
-                className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <Bell className="w-6 h-6 text-gray-600" fill="#FFD700" stroke="#2D5016" strokeWidth={2} />
-                {notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
-                    {notificationCount}
-                  </span>
-                )}
-              </button>
-
               {/* User Profile */}
               <button
                 onClick={() => navigate('/dashboard/profile')}
                 className="flex items-center gap-3 hover:bg-gray-100 rounded-full pl-1 pr-4 py-1 transition-colors"
               >
-                <div className="w-10 h-10 bg-[#2D5016] rounded-full flex items-center justify-center">
-                  <User className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 bg-[#2D5016] rounded-full flex items-center justify-center overflow-hidden border border-gray-200">
+                  {user.profilePic && user.profilePic !== "" ? (
+                    <img 
+                      src={user.profilePic} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = 'none'; // Hide broken image if URL fails
+                      }}
+                    />
+                  ) : (
+                    <User className="w-6 h-6 text-white" />
+                  )}
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-medium text-gray-900">
-                    {user.fullName || user.email || 'User'}
+                    {user?.name || user?.email || 'User'}
                   </p>
                   <p className="text-xs text-gray-500">Farm Owner</p>
                 </div>

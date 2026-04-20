@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Egg, FileText, ClipboardList, Lightbulb } from 'lucide-react';
+import { ShoppingBag, Egg, BarChart3, ClipboardList, Lightbulb } from 'lucide-react';
 import { db, rtdb } from '../firebase';
 import { collection, query, limit, onSnapshot } from 'firebase/firestore';
 import { ref, onValue } from 'firebase/database';
@@ -8,7 +8,7 @@ import { ref, onValue } from 'firebase/database';
 export default function Home() {
   const navigate = useNavigate();
   const [eggCount, setEggCount] = useState(0);
-  const [feedRemaining, setFeedRemaining] = useState('0kg');
+  const [feedQuantity, setFeedQuantity] = useState(0); // Changed to feedQuantity
   const [recommendation, setRecommendation] = useState('Loading daily tips...');
   
   // Get user data from local storage
@@ -20,18 +20,30 @@ export default function Home() {
     const unsubscribeRtdb = onValue(eggRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        // Handle if it's a direct number or an object from your app
-        setEggCount(typeof data === 'number' ? data : data.today_count || 0);
+        if (typeof data === 'number') {
+          setEggCount(data);
+        } else {
+          // Get the latest entry from the collection based on date
+          const entries = Object.values(data).sort((a, b) => new Date(b.date) - new Date(a.date));
+          if (entries.length > 0) {
+            setEggCount(entries[0].total || 0);
+          }
+        }
       }
     });
 
-    // 2. Listen to Firestore for Farm Data (Feed Inventory)
-    const farmDataRef = collection(db, 'farm_data');
-    const unsubscribeFarm = onSnapshot(query(farmDataRef, limit(1)), (snapshot) => {
-      if (!snapshot.empty) {
-        const data = snapshot.docs[0].data();
-        setFeedRemaining(`${data.feed_remaining || 0}kg`);
-      }
+    // 2. Listen to Firestore for Feed Inventory (summing quantities from subcollection)
+    const feedCollectionRef = collection(db, 'farm_data', 'shared', 'feed');
+    const unsubscribeFeed = onSnapshot(feedCollectionRef, (snapshot) => {
+      let totalFeed = 0;
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        totalFeed += Number(data.quantity || 0);
+      });
+      setFeedQuantity(totalFeed);
+    }, (error) => {
+      console.error("Error fetching feed quantity for Home page:", error);
+      setFeedQuantity(0); // Set to 0 on error
     });
 
     // 3. Listen to Firestore for AI Recommendations
@@ -45,7 +57,7 @@ export default function Home() {
 
     return () => {
       unsubscribeRtdb();
-      unsubscribeFarm();
+      unsubscribeFeed(); // Use the new feed subcollection unsubscribe
       unsubscribeSettings();
     };
   }, []);
@@ -53,7 +65,7 @@ export default function Home() {
   const shortcuts = [
     { icon: ShoppingBag, label: 'Feed Inventory', path: '/dashboard/feed-inventory' },
     { icon: Egg, label: 'Egg Count', path: '/dashboard/egg-count' },
-    { icon: FileText, label: 'Report', path: '/dashboard/production-reports' },
+    { icon: BarChart3, label: 'Analytics', path: '/dashboard/analytics' },
     { icon: ClipboardList, label: 'Tasks', path: '/dashboard/schedule' },
   ];
 
@@ -61,7 +73,7 @@ export default function Home() {
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Welcome Card */}
       <div className="bg-[#2D5016] text-white rounded-3xl p-8 shadow-lg">
-        <h2 className="font-bold text-3xl">Hi, {user.fullName?.split(' ')[0] || 'Farmer'}!</h2>
+        <h2 className="font-bold text-3xl">Hi, {user?.name || user?.fullName || 'Farmer'}!</h2>
         <p className="text-white/80 text-lg mt-1">Welcome Back!</p>
       </div>
 
@@ -72,7 +84,7 @@ export default function Home() {
             <Lightbulb className="w-7 h-7 text-yellow-400" />
           </div>
           <div>
-            <h3 className="font-bold text-xl text-gray-900 mb-2">AI Recommendation</h3>
+            <h3 className="font-bold text-xl text-gray-900 mb-2">Smart Recommendation</h3>
             <p className="text-gray-700 text-base leading-relaxed">
               {recommendation}
             </p>
@@ -116,11 +128,9 @@ export default function Home() {
         <div className="bg-orange-50 rounded-3xl p-6 border border-orange-200 shadow-sm">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-2 h-2 bg-orange-500 rounded-full" />
-            <span className="text-sm font-medium text-gray-600 uppercase tracking-wider">Feed Remaining</span>
+            <span className="text-sm font-medium text-gray-600 uppercase tracking-wider">Feed Quantity</span> {/* Changed label */}
           </div>
-          <div className="text-4xl font-black text-orange-600">
-            {feedRemaining}
-          </div>
+          <div className="text-4xl font-black text-orange-600">{feedQuantity.toLocaleString()}</div> {/* Display as number */}
         </div>
       </div>
 
