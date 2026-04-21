@@ -1,5 +1,5 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Menu, Home, BarChart3, Calendar, User, LogOut, Settings, ShoppingBag, Egg } from 'lucide-react';
+import { Menu, Home, BarChart3, Calendar, User, LogOut, ShoppingBag, Egg } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -28,7 +28,6 @@ export default function Dashboard() {
   ];
 
   const bottomNavItems = [
-    { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
     { icon: LogOut, label: 'Logout', action: handleLogout },
   ];
 

@@ -151,10 +151,8 @@ export default function EggCount() {
              <div className="relative flex items-center gap-1 px-2 py-1 group cursor-pointer">
                <input
                  type="date"
-                 // The input is transparent but covers the label, making it clickable.
-                 // Added hover/focus opacity for visual feedback.
-                 // w-full h-full ensures it covers the parent div entirely.
-                 className="absolute inset-0 opacity-0 hover:opacity-10 focus:opacity-10 cursor-pointer z-10 w-full h-full"
+                 className="absolute inset-0 opacity-0 cursor-pointer z-20 w-full h-full"
+                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
                  onChange={(e) => {
                    if (e.target.value) {
                      const [year, month, day] = e.target.value.split('-').map(Number);

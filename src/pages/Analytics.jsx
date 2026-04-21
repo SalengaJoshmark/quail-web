@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Download, TrendingUp, Calendar as CalendarIcon } from 'lucide-react';
+import { BarChart3, TrendingUp, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ref, onValue } from 'firebase/database';
-import { collection, query, limit, getDocs } from 'firebase/firestore';
+import { collection, query, limit, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db, rtdb } from '../firebase';
 import LoadingScreen from '../components/LoadingScreen';
 
@@ -14,57 +14,78 @@ export default function Analytics() {
     efficiency: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [currentMonthName] = useState(new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }));
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
+
+  const currentMonthName = selectedMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   useEffect(() => {
+    setLoading(true);
     // 1. Fetch total birds for efficiency calculation
+    const targetYear = selectedMonth.getFullYear();
+    const targetMonth = selectedMonth.getMonth(); // 0-indexed
+
     let birdCount = 0;
     const fetchBirdsAndData = async () => {
-      const q = query(collection(db, 'farm_data'), limit(1));
-      const snap = await getDocs(q);
-      if (!snap.empty) {
-        birdCount = snap.docs[0].data().total_quails || 0;
+      // Target the stats document directly as used in Profile.jsx
+      const statsRef = doc(db, 'farm_data', 'stats');
+      const statsSnap = await getDoc(statsRef);
+      if (statsSnap.exists()) {
+        birdCount = statsSnap.data().totalBirds || 0;
       }
 
       // Move RTDB listener inside or ensure birdCount is available
       const eggRef = ref(rtdb, 'egg_collections');
       return onValue(eggRef, (snapshot) => {
       const data = snapshot.val();
+      
       if (data) {
-        const entries = Object.values(data).sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Transform and filter by selected month/year
+        const allEntries = Object.values(data);
+        const filteredEntries = allEntries.filter(entry => {
+          const entryDate = new Date(entry.date);
+          return entryDate.getFullYear() === targetYear && entryDate.getMonth() === targetMonth;
+        }).sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort Ascending for week grouping
         
         // Calculate Monthly Totals
-        const total = entries.reduce((acc, curr) => acc + (Number(curr.total) || 0), 0);
-        const totalA = entries.reduce((acc, curr) => acc + (Number(curr.gradeA) || 0), 0);
-        const avg = entries.length > 0 ? Math.round(total / entries.length) : 0;
+        const total = filteredEntries.reduce((acc, curr) => acc + (Number(curr.total) || 0), 0);
+        const totalA = filteredEntries.reduce((acc, curr) => acc + (Number(curr.gradeA) || 0), 0);
+        const avg = filteredEntries.length > 0 ? Math.round(total / filteredEntries.length) : 0;
         
-        // Group by Week (Simple 7-day chunks for visualization)
-        const weeks = [];
-        for (let i = 0; i < entries.length; i += 7) {
-          const chunk = entries.slice(i, i + 7);
-          const weekTotal = chunk.reduce((acc, curr) => acc + (Number(curr.total) || 0), 0);
-          const weekA = chunk.reduce((acc, curr) => acc + (Number(curr.gradeA) || 0), 0);
-          const weekB = chunk.reduce((acc, curr) => acc + (Number(curr.gradeB) || 0), 0);
-          const weekC = chunk.reduce((acc, curr) => acc + (Number(curr.gradeC) || 0), 0);
+        // Group by Actual Calendar Weeks
+        const weekMap = {};
+        filteredEntries.forEach(entry => {
+          const date = new Date(entry.date);
+          // Calculate Week of Month
+          const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+          const dayOfMonth = date.getDate();
+          const offset = firstDayOfMonth.getDay(); 
+          const weekIndex = Math.ceil((dayOfMonth + offset) / 7);
           
-          weeks.push({
-            week: `Week ${Math.floor(i/7) + 1}`,
-            eggs: weekTotal,
-            grade_a: weekA,
-            grade_b: weekB,
-            grade_c: weekC
-          });
-        }
+          if (!weekMap[weekIndex]) {
+            weekMap[weekIndex] = { 
+              week: `Week ${weekIndex}`, 
+              eggs: 0, grade_a: 0, grade_b: 0, grade_c: 0,
+              startDate: null, endDate: null 
+            };
+          }
+          
+          weekMap[weekIndex].eggs += Number(entry.total || 0);
+          weekMap[weekIndex].grade_a += Number(entry.gradeA || 0);
+          weekMap[weekIndex].grade_b += Number(entry.gradeB || 0);
+          weekMap[weekIndex].grade_c += Number(entry.gradeC || 0);
+        });
 
-        setWeeklyData(weeks.reverse());
+        const weeks = Object.values(weekMap);
+
+        setWeeklyData(weeks);
         setMonthlyStats({
           totalEggs: total,
           averageDaily: avg,
           gradeAPercentage: total > 0 ? Math.round((totalA / total) * 100) : 0,
           efficiency: birdCount > 0 ? Math.round((avg / birdCount) * 100) : 0
         });
-        setLoading(false);
       }
+      setLoading(false);
       });
     };
 
@@ -72,7 +93,12 @@ export default function Analytics() {
     return () => {
        unsubscribePromise.then(unsub => unsub && unsub());
     };
-  }, []);
+  }, [selectedMonth]);
+
+  const handleMonthChange = (e) => {
+    const [year, month] = e.target.value.split('-');
+    setSelectedMonth(new Date(year, month - 1, 1));
+  };
 
   return (
     <>
@@ -81,13 +107,38 @@ export default function Analytics() {
       {/* Header with Download Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Monthly Analytics Report</h2>
-          <p className="text-gray-600 mt-1">{currentMonthName} Performance Summary</p>
+          <h2 className="text-2xl font-bold text-[#2D5016]">Farm Performance Analytics</h2>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-gray-600">{currentMonthName}</p>
+            <div className="relative flex items-center gap-1 bg-white border border-gray-200 px-3 py-1 rounded-lg shadow-sm group cursor-pointer">
+               <input 
+                 type="month" 
+                 className="absolute inset-0 opacity-0 cursor-pointer z-20 w-full h-full"
+                 value={`${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, '0')}`}
+                 onClick={(e) => e.target.showPicker && e.target.showPicker()}
+                 onChange={handleMonthChange}
+               />
+               <CalendarIcon className="w-3.5 h-3.5 text-gray-400 group-hover:text-[#2D5016] pointer-events-none" />
+               <span className="text-[10px] font-black uppercase text-gray-400 group-hover:text-[#2D5016] pointer-events-none">Change Period</span>
+            </div>
+          </div>
         </div>
-        <button className="flex items-center justify-center gap-2 bg-[#2D5016] text-white px-6 py-3 rounded-xl hover:bg-[#3d6b1f] transition-colors shadow-lg">
-          <Download className="w-5 h-5" />
-          Export PDF
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="flex bg-white border border-gray-200 p-1 rounded-xl shadow-sm">
+            <button 
+              onClick={() => setSelectedMonth(new Date(selectedMonth.setMonth(selectedMonth.getMonth() - 1)))}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4 text-gray-600" />
+            </button>
+            <button 
+              onClick={() => setSelectedMonth(new Date(selectedMonth.setMonth(selectedMonth.getMonth() + 1)))}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <ChevronRight className="w-4 h-4 text-gray-600" />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Summary Cards */}
