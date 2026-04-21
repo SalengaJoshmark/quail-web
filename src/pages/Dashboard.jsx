@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, Home, BarChart3, Calendar, User, LogOut, ShoppingBag, Egg } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 export default function Dashboard() {
@@ -11,6 +11,12 @@ export default function Dashboard() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -114,7 +120,9 @@ export default function Dashboard() {
                 {mainNavItems.find(item => item.path === location.pathname)?.label || 'Farm Overview'}
               </h2>
               <p className="text-sm text-gray-600 mt-0.5">
-                {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                {currentTime.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                <span className="mx-2 text-gray-300">|</span>
+                <span className="font-mono text-[#2D5016] font-bold">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
               </p>
             </div>
             

@@ -149,6 +149,7 @@ export default function FeedInventory() {
       {/* Inventory Grid */}
       <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-6">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-1" />
           <h3 className="text-xl font-bold text-gray-900">{filteredItems.length} items found</h3>
         </div>
 

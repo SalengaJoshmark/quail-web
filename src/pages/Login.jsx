@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase'; // Ensure db is exported from your firebase.js
@@ -106,8 +106,8 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
+            {/* Remember Me */}
+            <div className="flex items-center">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -115,9 +115,6 @@ export default function Login() {
                 />
                 <span className="text-sm text-gray-600">Remember me</span>
               </label>
-              <Link to="/forgot-password" className="text-sm text-[#2D5016] hover:underline">
-                Forgot password?
-              </Link>
             </div>
 
             <button
@@ -128,13 +125,6 @@ export default function Login() {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
-
-          <p className="text-center mt-6 text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-[#2D5016] font-medium hover:underline">
-              Sign up
-            </Link>
-          </p>
         </div>
         <p className="text-center text-white/60 text-sm mt-6">
           © 2026 Waje's Quail Farm. All rights reserved.

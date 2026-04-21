@@ -67,6 +67,7 @@ export default function Profile() {
     };
 
     fetchMonitorCounts();
+    const countInterval = setInterval(fetchMonitorCounts, 30000);
 
     const usersRef = collection(db, 'user_access');
     const userQuery = query(usersRef, where('email', '==', storedUser.email));
@@ -118,6 +119,7 @@ export default function Profile() {
     return () => {
       unsubscribeUser();
       unsubscribeStats();
+      clearInterval(countInterval);
     };
   }, [storedUser.email]);
 
@@ -297,6 +299,7 @@ export default function Profile() {
 
             <div className="bg-white border border-gray-200 rounded-3xl p-8 shadow-sm">
               <div className="flex items-center gap-2 mb-6">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse mr-1" />
                 <Activity className="w-5 h-5 text-[#2D5016]" />
                 <h3 className="text-xl font-bold text-gray-900">Database Monitor</h3>
               </div>
